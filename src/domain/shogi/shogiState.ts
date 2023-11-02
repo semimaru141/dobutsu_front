@@ -1,4 +1,5 @@
-import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, SquareIndex } from "@/const";
+import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_INDEX, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_INDEX, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, SquareIndex } from "@/const";
+import { isEmpty, isLion, isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { err, ok, Result } from "neverthrow";
 import { Captured } from "./captured";
 import { Square } from "./square";
@@ -34,15 +35,12 @@ export class ShogiState {
         const newToSquare = toSquare.setPiece(fromSquare.getPiece());
 
         // 移動可能か判定
-        const canMoveResult = this.canMovePiece(fromSquare.getPiece() as MyPiece, from, to);
+        const canMoveResult = this.canMovePiece(fromSquare.getPiece(), from, to);
 
         // 駒を動かした後の駒台
         const newCapturedResult = (() => {
-            if (!toSquare.isEmpty() && toSquare.getPiece() !== OP_LION_NUM) {
-                return this.catchPiece(toSquare.getPiece() as OpPiece);
-            } else {
-                return ok(this.captured);
-            }
+            if(toSquare.isEmpty() || isLion(toSquare.getPiece())) return ok(this.captured);
+            return this.catchPiece(toSquare.getPiece());
         })()
 
         // 駒を動かした後の盤面
@@ -63,7 +61,7 @@ export class ShogiState {
         .map(([_, newBoard, newCaptured]) => new ShogiState(newBoard, newCaptured));
     }
 
-    public putPiece(capturedIndex: MyCapturedIndex, to: SquareIndex): Result<ShogiState, Error> {
+    public putPiece(capturedIndex: CapturedIndex, to: SquareIndex): Result<ShogiState, Error> {
         const newCapturedResult = this.useCaptured(capturedIndex);
 
         const toSquare = this.board[to];
@@ -78,6 +76,12 @@ export class ShogiState {
                         return MY_GIR_NUM;
                     case MY_CHICK_INDEX:
                         return MY_CHICK_NUM;
+                    case OP_ELE_INDEX:
+                        return OP_ELE_NUM;
+                    case OP_GIR_INDEX:
+                        return OP_GIR_NUM;
+                    case OP_CHICK_INDEX:
+                        return OP_CHICK_NUM;
                 }
             })()
             if(piece === undefined) return err(new Error());
@@ -91,9 +95,12 @@ export class ShogiState {
         .map(([newBoard, newCaptured]) => new ShogiState(newBoard, newCaptured));
     }
 
-    public canMovePiece(piece: MyPiece, from: SquareIndex, to: SquareIndex): Result<unknown, Error> {
+    public canMovePiece(piece: Piece, from: SquareIndex, to: SquareIndex): Result<unknown, Error> {
         const toSquare = this.board[to];
-        if (toSquare.getPiece() > EMPTY && toSquare.getPiece() < OP_LION_NUM) return err(new Error());
+        
+        if (isEmpty(piece)) return err(new Error());
+        if (isMyPiece(piece) && isMyPiece(toSquare.getPiece())) return err(new Error());
+        if (isOpPiece(piece) && isOpPiece(toSquare.getPiece())) return err(new Error());
 
         const moves = ShogiState.getMove(piece, from);
         if (moves.includes(to)) {
@@ -115,8 +122,8 @@ export class ShogiState {
      * @param piece 取った駒
      * @returns 取った後の駒台
      */
-    private catchPiece(piece: OpPiece): Result<Captured[], Error> {
-        const targetCapturedIndex = ((): MyCapturedIndex | undefined => {
+    private catchPiece(piece: Piece): Result<Captured[], Error> {
+        const targetCapturedIndex = ((): CapturedIndex | undefined => {
             switch (piece) {
                 case OP_ELE_NUM:
                     return MY_ELE_INDEX;
@@ -126,6 +133,14 @@ export class ShogiState {
                     return MY_CHICK_INDEX;
                 case OP_HEN_NUM:
                     return MY_CHICK_INDEX;
+                case MY_ELE_NUM:
+                    return OP_ELE_INDEX;
+                case MY_GIR_NUM:
+                    return OP_GIR_INDEX;
+                case MY_CHICK_NUM:
+                    return OP_CHICK_INDEX;
+                case MY_HEN_NUM:
+                    return OP_CHICK_INDEX;
             }
         })()
         if (targetCapturedIndex === undefined) return err(new Error());
@@ -141,7 +156,7 @@ export class ShogiState {
      * @param capturedIndex 使用しようとしている駒台のインデックス 
      * @returns 使用した後の駒台
      */
-    private useCaptured(capturedIndex: MyCapturedIndex): Result<Captured[], Error> {
+    private useCaptured(capturedIndex: CapturedIndex): Result<Captured[], Error> {
         const targetCaptured = this.captured[capturedIndex];
         const targetAmount = targetCaptured.getAmount();
         if (targetAmount === 0) return err(new Error());
@@ -155,13 +170,17 @@ export class ShogiState {
      * @param squareIndex 移動元のマス
      * @returns 移動可能なマスのインデックス
      */
-    private static getMove(piece: MyPiece, squareIndex: SquareIndex): SquareIndex[] {
+    private static getMove(piece: MyPiece | OpPiece, squareIndex: SquareIndex): SquareIndex[] {
         const moveDiffs = ((): number[] => {
             switch (piece) {
                 case MY_CHICK_NUM:
                     if (squareIndex > 3) return [-3];
                     else return [];
+                case OP_CHICK_NUM:
+                    if (squareIndex < 9) return [3];
+                    else return [];
                 case MY_LION_NUM:
+                case OP_LION_NUM:
                     if (squareIndex === 0) return [1, 3, 4];
                     else if (squareIndex === 1) return [-1, 1, 2, 3, 4];
                     else if (squareIndex === 2) return [-1, 2, 3];
@@ -172,6 +191,7 @@ export class ShogiState {
                     else if (squareIndex === 10) return [-4, -3, -2, -1, 1];
                     else if (squareIndex === 11) return [-4, -3, -1];
                 case MY_ELE_NUM:
+                case OP_ELE_NUM:
                     if (squareIndex === 0) return [4];
                     else if (squareIndex === 1) return [2, 4];
                     else if (squareIndex === 2) return [2];
@@ -182,6 +202,7 @@ export class ShogiState {
                     else if (squareIndex === 10) return [-4, -2];
                     else if (squareIndex === 11) return [-4];
                 case MY_GIR_NUM:
+                case OP_GIR_NUM:
                     if (squareIndex === 0) return [1, 3];
                     else if (squareIndex === 1) return [-1, 1, 3];
                     else if (squareIndex === 2) return [-1, 3];
@@ -201,6 +222,16 @@ export class ShogiState {
                     else if (squareIndex === 9) return [-3, -2, 1];
                     else if (squareIndex === 10) return [-4, -3, -2, -1, 1];
                     else if (squareIndex === 11) return [-4, -3, -1];
+                case OP_HEN_NUM:
+                    if (squareIndex === 0) return [1, 3, 4];
+                    else if (squareIndex === 1) return [-1, 1, 2, 3, 4];
+                    else if (squareIndex === 2) return [-1, 2, 3];
+                    else if (squareIndex === 3 || squareIndex === 6) return [-3, 1, 3, 4];
+                    else if (squareIndex === 4 || squareIndex === 7) return [-3, -1, 1, 2, 3, 4];
+                    else if (squareIndex === 5 || squareIndex === 8) return [-3, -1, 2, 3];
+                    else if (squareIndex === 9) return [-3, 1];
+                    else if (squareIndex === 10) return [-3, -1, 1];
+                    else if (squareIndex === 11) return [-3, -1];
             }
             return [];
         })();

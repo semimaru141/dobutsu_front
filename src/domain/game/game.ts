@@ -1,4 +1,5 @@
-import { CapturedIndex, EMPTY, MyCapturedIndex, MyPiece, OP_LION_NUM, SquareIndex } from "@/const";
+import { CapturedIndex, SquareIndex } from "@/const";
+import { isEmpty } from "@/util/pieceFunc";
 import { CapturedState, CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { SquareState, SquareViewModel } from "@/viewModel/squareViewModel";
 import { SystemViewModel } from "@/viewModel/systemViewModel";
@@ -70,13 +71,13 @@ export class Game {
                     if (selectingAction.squareIndex === squareIndex) return 'selecting';
                     const selectingPiece = this.states.shogiState.getPiece(selectingAction.squareIndex);
                     const result = this.states.shogiState.canMovePiece(
-                        selectingPiece as MyPiece,
+                        selectingPiece,
                         selectingAction.squareIndex,
                         squareIndex
                     );
                     return result.isOk() ? 'clickable' : 'inclickable';
                 } case 'CAPTURED': {
-                    return piece === EMPTY ? 'clickable' : 'inclickable';
+                    return isEmpty(piece) ? 'clickable' : 'inclickable';
                 }
             }
         })()
@@ -125,17 +126,13 @@ export class Game {
         switch (selectingAction.type) {
             case 'NONE': {
                 // 選択中のマスがない場合はクリックされたマスを選択中のマスにする
-
-                // クリックされたマスが空の場合は何もしない
-                if (toPiece === EMPTY) return;
-                // クリックされたマスの駒が自分の駒でない場合は何もしない
-                // todo 一旦自分の番のみを対象に作成
-                if (toPiece >= OP_LION_NUM) return;
-                
-                this.states.gameState = this.states.gameState.setSelectingAction({
+                const result = this.states.gameState.setSelectingAction({
                     type: 'BOARD',
                     squareIndex: clickedSquareIndex,
+                    piece: toPiece,
                 });
+                if (result.isErr()) return;
+                this.states.gameState = result.value;
                 return;
             } case 'BOARD': {
                 if(selectingAction.squareIndex === clickedSquareIndex) {
@@ -152,7 +149,10 @@ export class Game {
                 return;
             } case 'CAPTURED': {
                 // 選択中のマスが駒台の場合は、クリックされたマスに駒を置く
-                const putResult = this.states.shogiState.putPiece(selectingAction.capturedIndex as MyCapturedIndex, clickedSquareIndex);
+                const putResult = this.states.shogiState.putPiece(
+                    selectingAction.capturedIndex,
+                    clickedSquareIndex
+                );
                 if (putResult.isErr()) return;
                 this.states.shogiState = putResult.value;
 
@@ -162,9 +162,6 @@ export class Game {
     }
 
     private clickCaptured(capturedIndex: CapturedIndex) {
-        // todo 一旦自分の番のみを対象に作成
-        if (capturedIndex >= 3) return;
-
         const selectingAction = this.states.gameState.getSelectingAction();
 
         if (selectingAction.type === 'CAPTURED' && selectingAction.capturedIndex === capturedIndex) {
@@ -172,25 +169,23 @@ export class Game {
             this.clearState();
         } else {
             // 選択中のマスとクリックされたマスが異なる場合は選択中のマスをクリックされたマスにする
-            this.states.gameState = this.states.gameState.setSelectingAction({
+            const result = this.states.gameState.setSelectingAction({
                 type: 'CAPTURED',
                 capturedIndex: capturedIndex,
             });
+            if (result.isErr()) return;
+            this.states.gameState = result.value;
         }
     }
 
     private turnEnd() {
         // 選択中のマスを解除し、手番を変更する
-        this.states.gameState = this.states.gameState.setSelectingAction({
-            type: 'NONE',
-        }).toggleTurn();
+        this.states.gameState = this.states.gameState.toggleTurn();
     }
 
     private clearState() {
         // 選択中のマスを解除する
-        this.states.gameState = this.states.gameState.setSelectingAction({
-            type: 'NONE',
-        });
+        this.states.gameState = this.states.gameState.clearSelectingAction();
     }
 
     private emitViewModel() {

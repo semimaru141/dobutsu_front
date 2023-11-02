@@ -1,4 +1,5 @@
 import { EMPTY, Piece, SquareIndex } from "@/const";
+import { isEmpty } from "@/util/pieceFunc";
 
 export class Square {
     constructor (
@@ -15,7 +16,11 @@ export class Square {
     }
 
     public isEmpty() {
-        return this.piece === EMPTY;
+        return isEmpty(this.piece);
+    }
+
+    public isPieceExists() {
+        return !this.isEmpty();
     }
 
     public setPiece(piece: Piece): Square {
