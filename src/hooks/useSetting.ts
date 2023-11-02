@@ -20,13 +20,17 @@ export const useSetting = () => {
         return () => {
             stateListener.removeSystemViewModelListener(listener);
         }
-    }, []);
+    }, [
+        stateListener,
+    ]);
 
     const reset = useCallback(() => {
         gameListener.emitGameEvent({
             type: 'reset',
         });
-    }, []);
+    }, [
+        gameListener,
+    ]);
 
     return {
         reset,

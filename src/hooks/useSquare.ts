@@ -27,14 +27,20 @@ export const useSquare = ({
         return () => {
             stateListener.removeSquareViewModelListener(squareIndex, listener);
         }
-    }, []);
+    }, [
+        squareIndex,
+        stateListener
+    ]);
 
     const clickBoard = useCallback(() => {
         gameListener.emitClickEvent({
             type: 'BOARD',
             squareIndex: squareIndex,
         });
-    }, []);
+    }, [
+        squareIndex,
+        gameListener,
+    ]);
 
     return {
         clickBoard,

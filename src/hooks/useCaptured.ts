@@ -26,14 +26,20 @@ export const useCaptured = ({
         return () => {
             stateListener.removeCapturedViewModelListener(capturedIndex, listener);
         }
-    }, []);
+    }, [
+        capturedIndex,
+        stateListener
+    ]);
 
     const clickCaptured = useCallback(() => {
         gameListener.emitClickEvent({
             type: 'CAPTURED',
             capturedIndex: capturedIndex,
         });
-    }, []);
+    }, [
+        capturedIndex,
+        gameListener,
+    ]);
 
     return {
         captured,
