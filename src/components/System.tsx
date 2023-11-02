@@ -1,4 +1,4 @@
-import { useSystem } from "@/hooks/useSystem";
+import { useSetting } from "@/hooks/useSetting";
 import { Turn } from "@/viewModel/systemViewModel";
 import styled from "styled-components";
 
@@ -6,7 +6,7 @@ export const System = () => {
     const { 
         system,
         reset
-    } = useSystem();
+    } = useSetting();
 
     return (
         <SystemDiv>

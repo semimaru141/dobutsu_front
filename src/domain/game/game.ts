@@ -3,74 +3,34 @@ import { isEmpty } from "@/util/pieceFunc";
 import { CapturedState, CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { SquareState, SquareViewModel } from "@/viewModel/squareViewModel";
 import { SystemViewModel } from "@/viewModel/systemViewModel";
+import { err, ok, Result } from "neverthrow";
 import { ShogiState } from "../shogi/shogiState";
-import { GameListener } from "./gameListener";
 import { GameState } from "./gameState";
-import { StateListener } from "./stateListner";
 
 export class Game {
-    private states: {
-        shogiState: ShogiState;
-        gameState: GameState;
-    }
-
     constructor(
-        private readonly gameListner: GameListener,
-        private readonly stateListener: StateListener,
-        shogiState: ShogiState,
-        gameState: GameState,
-    ) {
-        this.states = {
-            shogiState: shogiState,
-            gameState: gameState,
-        };
-        this.init();
-    }
+        private shogiState: ShogiState,
+        private gameState: GameState,
+    ) {}
 
-    private init() {
-        // 初期設定、イベントリスナの登録など
-        this.gameListner.onGameEvent((param) => {
-            switch (param.type) {
-                case 'reset':
-                    this.states.shogiState = ShogiState.createInitialState();
-                    this.states.gameState = GameState.createInitialState();
-            }
-            this.emitViewModel();
-        });
-
-        this.gameListner.onClickEvent((param) => {
-            switch (param.type) {
-                case 'BOARD': {
-                    this.clickBoard(param.squareIndex);
-                    break;
-                } case 'CAPTURED': {
-                    this.clickCaptured(param.capturedIndex);
-                    break;
-                }
-            }
-            this.emitViewModel();
-        });
-    }
-
-    public getGameListener() {
-        return this.gameListner;
-    }
-    
-    public getStateListener() {
-        return this.stateListener;
+    public static createInitialState() {
+        return new Game(
+            ShogiState.createInitialState(),
+            GameState.createInitialState(),
+        );
     }
 
     public getSquareViewModel(squareIndex: SquareIndex): SquareViewModel {
-        const selectingAction = this.states.gameState.getSelectingAction();
-        const piece = this.states.shogiState.getPiece(squareIndex);
+        const selectingAction = this.gameState.getSelectingAction();
+        const piece = this.shogiState.getPiece(squareIndex);
         const squareState = ((): SquareState => {
             switch (selectingAction.type) {
                 case 'NONE': {
                     return 'inclickable';
                 } case 'BOARD': {
                     if (selectingAction.squareIndex === squareIndex) return 'selecting';
-                    const selectingPiece = this.states.shogiState.getPiece(selectingAction.squareIndex);
-                    const result = this.states.shogiState.canMovePiece(
+                    const selectingPiece = this.shogiState.getPiece(selectingAction.squareIndex);
+                    const result = this.shogiState.canMovePiece(
                         selectingPiece,
                         selectingAction.squareIndex,
                         squareIndex
@@ -90,8 +50,8 @@ export class Game {
     }
 
     public getCapturedViewModel(capturedIndex: CapturedIndex): CapturedViewModel {
-        const selectingAction = this.states.gameState.getSelectingAction();
-        const amount = this.states.shogiState.getAmount(capturedIndex);
+        const selectingAction = this.gameState.getSelectingAction();
+        const amount = this.shogiState.getAmount(capturedIndex);
         const capturedState = ((): CapturedState => {
             switch (selectingAction.type) {
                 case 'NONE': {
@@ -113,90 +73,74 @@ export class Game {
 
     public getSystemViewModel(): SystemViewModel {
         return {
-            turn: this.states.gameState.getTurn(),
+            turn: this.gameState.getTurn(),
+        }
+    }
+
+    public clickBoard(clickedSquareIndex: SquareIndex): Result<Game, Error> {
+        const toPiece = this.shogiState.getPiece(clickedSquareIndex);
+        const selectingAction = this.gameState.getSelectingAction();
+
+        switch (selectingAction.type) {
+            case 'NONE': {
+                // 選択中のマスがない場合はクリックされたマスを選択中のマスにする
+                const result = this.gameState.setSelectingAction({
+                    type: 'BOARD',
+                    squareIndex: clickedSquareIndex,
+                    piece: toPiece,
+                });
+                if (result.isErr()) return err(result.error);
+                return ok(new Game(this.shogiState, result.value));
+            } case 'BOARD': {
+                if(selectingAction.squareIndex === clickedSquareIndex) {
+                    // 選択中のマスとクリックされたマスが同じ場合は選択中のマスを解除する
+                    return ok(this.clearState());
+                } else {
+                    // 選択中のマスとクリックされたマスが異なる場合は移動する
+                    const moveRsult = this.shogiState.movePiece(selectingAction.squareIndex, clickedSquareIndex);
+                    if (moveRsult.isErr()) return err(moveRsult.error);
+
+                    return ok(this.turnEnd(moveRsult.value));
+                }
+            } case 'CAPTURED': {
+                // 選択中のマスが駒台の場合は、クリックされたマスに駒を置く
+                const putResult = this.shogiState.putPiece(
+                    selectingAction.capturedIndex,
+                    clickedSquareIndex
+                );
+                if (putResult.isErr()) return err(putResult.error);
+                
+                return ok(this.turnEnd(putResult.value));
+            }
+        }
+    }
+
+    public clickCaptured(capturedIndex: CapturedIndex): Result<Game, Error> {
+        const selectingAction = this.gameState.getSelectingAction();
+
+        if (selectingAction.type === 'CAPTURED' && selectingAction.capturedIndex === capturedIndex) {
+            // 選択中のマスとクリックされたマスが同じ場合は選択中のマスを解除する
+            return ok(this.clearState());
+        } else {
+            // 選択中のマスとクリックされたマスが異なる場合は選択中のマスをクリックされたマスにする
+            const result = this.gameState.setSelectingAction({
+                type: 'CAPTURED',
+                capturedIndex: capturedIndex,
+            });
+            if (result.isErr()) return err(result.error);
+            return ok(new Game(this.shogiState, result.value));
         }
     }
 
     // ========================================
 
-    private clickBoard(clickedSquareIndex: SquareIndex) {
-        const toPiece = this.states.shogiState.getPiece(clickedSquareIndex);
-        const selectingAction = this.states.gameState.getSelectingAction();
-
-        switch (selectingAction.type) {
-            case 'NONE': {
-                // 選択中のマスがない場合はクリックされたマスを選択中のマスにする
-                const result = this.states.gameState.setSelectingAction({
-                    type: 'BOARD',
-                    squareIndex: clickedSquareIndex,
-                    piece: toPiece,
-                });
-                if (result.isErr()) return;
-                this.states.gameState = result.value;
-                return;
-            } case 'BOARD': {
-                if(selectingAction.squareIndex === clickedSquareIndex) {
-                    // 選択中のマスとクリックされたマスが同じ場合は選択中のマスを解除する
-                    this.clearState();
-                } else {
-                    // 選択中のマスとクリックされたマスが異なる場合は移動する
-                    const moveRsult = this.states.shogiState.movePiece(selectingAction.squareIndex, clickedSquareIndex);
-                    if (moveRsult.isErr()) return;
-                    this.states.shogiState = moveRsult.value;
-
-                    this.turnEnd();
-                }
-                return;
-            } case 'CAPTURED': {
-                // 選択中のマスが駒台の場合は、クリックされたマスに駒を置く
-                const putResult = this.states.shogiState.putPiece(
-                    selectingAction.capturedIndex,
-                    clickedSquareIndex
-                );
-                if (putResult.isErr()) return;
-                this.states.shogiState = putResult.value;
-
-                this.turnEnd();
-            }
-        }
-    }
-
-    private clickCaptured(capturedIndex: CapturedIndex) {
-        const selectingAction = this.states.gameState.getSelectingAction();
-
-        if (selectingAction.type === 'CAPTURED' && selectingAction.capturedIndex === capturedIndex) {
-            // 選択中のマスとクリックされたマスが同じ場合は選択中のマスを解除する
-            this.clearState();
-        } else {
-            // 選択中のマスとクリックされたマスが異なる場合は選択中のマスをクリックされたマスにする
-            const result = this.states.gameState.setSelectingAction({
-                type: 'CAPTURED',
-                capturedIndex: capturedIndex,
-            });
-            if (result.isErr()) return;
-            this.states.gameState = result.value;
-        }
-    }
-
-    private turnEnd() {
+    private turnEnd(newShogiState: ShogiState) {
         // 選択中のマスを解除し、手番を変更する
-        this.states.gameState = this.states.gameState.toggleTurn();
+        return new Game(newShogiState, this.gameState.toggleTurn());
     }
 
     private clearState() {
         // 選択中のマスを解除する
-        this.states.gameState = this.states.gameState.clearSelectingAction();
-    }
-
-    private emitViewModel() {
-        for (let i = 0; i < 12; i++) {
-            this.stateListener.emitSquareViewModel(i as SquareIndex, this.getSquareViewModel(i as SquareIndex));
-        }
-
-        for (let i = 0; i < 6; i++) {
-            this.stateListener.emitCapturedViewModel(i as CapturedIndex, this.getCapturedViewModel(i as CapturedIndex));
-        }
-
-        this.stateListener.emitSystemViewModel(this.getSystemViewModel());
+        return new Game(this.shogiState, this.gameState.clearSelectingAction());
     }
 }

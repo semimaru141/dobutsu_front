@@ -1,7 +1,7 @@
 import { CapturedIndex } from "@/const";
 import { CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { useCallback, useEffect, useState } from "react";
-import { useGame } from "./gameProvider";
+import { useSystem } from "./systemProvider";
 
 export const useCaptured = ({
     capturedIndex
@@ -12,7 +12,7 @@ export const useCaptured = ({
         game,
         stateListener,
         gameListener
-    } = useGame();
+    } = useSystem();
 
     const [captured, setCaptured] = useState<CapturedViewModel>(game.getCapturedViewModel(capturedIndex));
 

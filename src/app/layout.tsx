@@ -1,11 +1,10 @@
 "use client";
 
-import { GameContext } from '../hooks/gameProvider'
-import { Game } from '../domain/game/Game'
+import { SystemContext } from '../hooks/systemProvider'
+import { Game } from '../domain/game/game'
 import { GameListener } from '../domain/game/GameListener'
 import { StateListener } from '@/domain/game/stateListner'
-import { ShogiState } from '@/domain/shogi/shogiState'
-import { GameState } from '@/domain/game/gameState'
+import { System } from '@/domain/system/system';
 
 export default function RootLayout({
   children,
@@ -13,17 +12,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <GameContext.Provider value={
-      new Game(
-          new GameListener(),
-          new StateListener(),
-          ShogiState.createInitialState(),
-          GameState.createInitialState()
+    <SystemContext.Provider value={
+      new System(
+        new GameListener(),
+        new StateListener(),
+        Game.createInitialState()
       )
     }>
       <html lang="jp">
         <body>{children}</body>
       </html>
-    </GameContext.Provider>
+    </SystemContext.Provider>
   );
 }

@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import { ClickEventParams, CLICK_EVENT, GameEventParams, GAME_EVENT } from "./gameEvent";
+import { ClickEventParams, CLICK_EVENT, GameEventParams, GAME_EVENT } from "@/event/gameEvent";
 
 export class GameListener extends EventEmitter {
     public emitGameEvent(param: GameEventParams) {

@@ -1,13 +1,13 @@
 import { SystemViewModel } from "@/viewModel/systemViewModel";
 import { useCallback, useEffect, useState } from "react";
-import { useGame } from "./gameProvider"
+import { useSystem } from "./systemProvider"
 
-export const useSystem = () => {
+export const useSetting = () => {
     const {
         game,
         stateListener,
         gameListener
-    } = useGame();
+    } = useSystem();
     const [system, setSystem] = useState<SystemViewModel>(game.getSystemViewModel()); 
 
     useEffect(() => {

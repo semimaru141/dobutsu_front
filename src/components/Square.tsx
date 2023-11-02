@@ -3,19 +3,6 @@ import { useSquare } from "@/hooks/useSquare";
 import { SquareState } from "@/viewModel/squareViewModel";
 import styled from "styled-components";
 
-const SquareDiv = styled.div<{ clickable: SquareState }>`
-    width: 100px;
-    height: 100px;
-    border: 1px solid black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 40px;
-    ${
-        props => props.clickable === 'clickable' ? 'background-color: pink' : props.clickable === 'selecting' ? 'background-color: palegreen' : ''
-    }
-`;
-
 type Props = {
     squareIndex: SquareIndex;
 }
@@ -29,7 +16,7 @@ export const Square: React.FC<Props> = ({ squareIndex }) => {
 
     return (
         <SquareDiv
-            clickable={square.state}
+            $clickable={square.state}
             onClick={clickBoard}
         >
             {str}
@@ -63,3 +50,16 @@ const pieceStringParser = (piece: Piece): string => {
             return 'h';
     }   
 }
+
+const SquareDiv = styled.div<{ $clickable: SquareState }>`
+    width: 100px;
+    height: 100px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    ${
+        props => props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : ''
+    }
+`;

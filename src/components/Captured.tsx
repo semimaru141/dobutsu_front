@@ -21,7 +21,7 @@ export const Captured: React.FC<Props> = ({ capturedIndex }) => {
     } else {
         return (
             <CapturedContainer onClick={clickCaptured}>
-                <CapturedDiv selecting={captured.state === 'selecting'}>
+                <CapturedDiv $selecting={captured.state === 'selecting'}>
                     {capturedStringParse(capturedIndex)}
                 </CapturedDiv>
                 <CapturedAmount>{captured.amount}</CapturedAmount>
@@ -50,7 +50,7 @@ const capturedStringParse = (capturedIndex: CapturedIndex): string => {
 const CapturedContainer = styled.div`
     position: relative;
 `;
-const CapturedDiv = styled.div<{ selecting: boolean }>`
+const CapturedDiv = styled.div<{ $selecting: boolean }>`
     display: flex;
     justify-content: center;
     align-items: center;
@@ -58,7 +58,7 @@ const CapturedDiv = styled.div<{ selecting: boolean }>`
     width: 50px;
     height: 50px;
     ${
-        props => props.selecting ? 'background-color: palegreen' : ''
+        props => props.$selecting ? 'background-color: palegreen' : ''
     }
 `;
 const CapturedDivNone = styled.div``;
