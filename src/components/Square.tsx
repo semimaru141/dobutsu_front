@@ -1,5 +1,6 @@
-import { EMPTY, MY_CHICK_NUM, MY_ELE_NUM, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OP_CHICK_NUM, OP_ELE_NUM, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, SquareIndex } from "@/const";
+import { EMPTY, MY_CHICK_NUM, MY_ELE_NUM, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OP_CHICK_NUM, OP_ELE_NUM, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, Player, SquareIndex } from "@/const";
 import { useSquare } from "@/hooks/useSquare";
+import { isMyPiece } from "@/util/pieceFunc";
 import { SquareState } from "@/viewModel/squareViewModel";
 import styled from "styled-components";
 
@@ -17,6 +18,7 @@ export const Square: React.FC<Props> = ({ squareIndex }) => {
     return (
         <SquareDiv
             $clickable={square.state}
+            $player={isMyPiece(square.piece) ? 'ME' : 'OPPONENT'}
             onClick={clickBoard}
         >
             {str}
@@ -51,7 +53,7 @@ const pieceStringParser = (piece: Piece): string => {
     }   
 }
 
-const SquareDiv = styled.div<{ $clickable: SquareState }>`
+const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
     width: 100px;
     height: 100px;
     border: 1px solid black;
@@ -60,6 +62,10 @@ const SquareDiv = styled.div<{ $clickable: SquareState }>`
     align-items: center;
     font-size: 40px;
     ${
-        props => props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : ''
+        props => {
+            const background = props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : '';
+            const color = props.$player === 'ME' ? 'color: black' : 'color: red';
+            return [background, color].join(';');
+        }
     }
 `;

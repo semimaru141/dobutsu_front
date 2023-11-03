@@ -1,5 +1,11 @@
-export type Turn = 'ME' | 'OPPONENT'
+import { Player } from "@/const";
 
 export type SystemViewModel = {
-    turn: Turn;
+    turnPlayer: Player;
+    finishStatus: {
+        isFinished: true;
+        winner: Player;
+    } | {
+        isFinished: false;
+    };
 }

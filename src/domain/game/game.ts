@@ -72,8 +72,23 @@ export class Game {
     }
 
     public getSystemViewModel(): SystemViewModel {
-        return {
-            turn: this.gameState.getTurn(),
+        const winnerResult = this.gameState.getWinner();
+        const turnPlayer = this.gameState.getTurnPlayer();
+        if(winnerResult.isErr()) {
+            return {
+                turnPlayer,
+                finishStatus: {
+                    isFinished: false,
+                },
+            };
+        } else {
+            return {
+                turnPlayer,
+                finishStatus: {
+                    isFinished: true,
+                    winner: winnerResult.value,
+                },
+            };
         }
     }
 
@@ -134,9 +149,20 @@ export class Game {
 
     // ========================================
 
+    /**
+     * ターンを終了する
+     * 終了判定を行い、終了している場合はゲームを終了する
+     */
     private turnEnd(newShogiState: ShogiState) {
-        // 選択中のマスを解除し、手番を変更する
-        return new Game(newShogiState, this.gameState.toggleTurn());
+        const nextGameState = this.gameState.toggleTurn();
+        const finish = newShogiState.isFinished(nextGameState.getTurnPlayer());
+
+        if (finish.isFinished) {
+            return new Game(newShogiState, nextGameState.setFinishStatus(finish.winner));
+        } else {
+            // 選択中のマスを解除し、手番を変更する
+            return new Game(newShogiState, nextGameState);
+        }
     }
 
     private clearState() {

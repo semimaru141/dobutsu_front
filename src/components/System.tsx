@@ -1,5 +1,6 @@
+import { Player } from "@/const";
 import { useSetting } from "@/hooks/useSetting";
-import { Turn } from "@/viewModel/systemViewModel";
+
 import styled from "styled-components";
 
 export const System = () => {
@@ -8,10 +9,12 @@ export const System = () => {
         reset
     } = useSetting();
 
+    const str = system.finishStatus.isFinished ? winnerStringParser(system.finishStatus.winner) : turnStringParser(system.turnPlayer);
+
     return (
         <SystemDiv>
             <TurnDiv>
-                { turnStringParser(system.turn) }
+                { str }
             </TurnDiv>
             <ResetButton onClick={reset}>
                 Reset
@@ -38,11 +41,20 @@ const TurnDiv = styled.div`
   font-size: 20px;
 `;
 
-const turnStringParser = (turn: Turn): string => {
+const winnerStringParser = (winner: Player): string => {
+    switch (winner) {
+        case 'ME':
+            return '先手の勝ちです';
+        case 'OPPONENT':
+            return '後手の勝ちです';
+    }
+}
+
+const turnStringParser = (turn: Player): string => {
     switch (turn) {
         case 'ME':
-            return 'あなたの番です';
+            return '先手の番です';
         case 'OPPONENT':
-            return '相手の番です';
+            return '後手の番です';
     }
 }

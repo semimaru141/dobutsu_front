@@ -1,4 +1,4 @@
-import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_INDEX, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_INDEX, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, SquareIndex } from "@/const";
+import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_INDEX, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_INDEX, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, Player, SquareIndex } from "@/const";
 import { isEmpty, isLion, isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { err, ok, Result } from "neverthrow";
 import { Captured } from "./captured";
@@ -113,6 +113,46 @@ export class ShogiState {
     public getNextStates(): ShogiState[] {
         // TODO: ここで次の状態を返す
         return [];
+    }
+
+    public isFinished(turnPlayer: Player): {
+        isFinished: true,
+        winner: Player
+    } | {
+        isFinished: false
+    } {
+        const myWin: {
+            isFinished: true,
+            winner: Player
+        } = {
+            isFinished: true,
+            winner: 'ME',
+        }
+        const opWin: {
+            isFinished: true,
+            winner: Player
+        } = {
+            isFinished: true,
+            winner: 'OPPONENT',
+        }
+
+        const myLionSquareIndex = this.board.findIndex(square => square.getPiece() === MY_LION_NUM);
+        const opLionSquareIndex = this.board.findIndex(square => square.getPiece() === OP_LION_NUM);
+        if(myLionSquareIndex === -1) {
+            return opWin;
+        } else if(opLionSquareIndex === -1) {
+            return myWin;
+        }
+
+        if (turnPlayer === 'ME' && myLionSquareIndex < 3) {
+            return myWin;
+        } else if (turnPlayer === 'OPPONENT' && opLionSquareIndex > 8) {
+            return opWin;
+        }
+
+        return {
+            isFinished: false,
+        }
     }
 
     // ====================
