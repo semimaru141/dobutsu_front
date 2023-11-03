@@ -15,8 +15,8 @@ export class Model {
         return new Model(model);
     }
 
-    // 後手用
-    public getChooseMinStrategy() {
+    // 先手用
+    public getChooseStrategy() {
         return (keys: string[]): Result<string, Error> => {
             let minIndex = 0;
             let min = Infinity;
@@ -31,26 +31,8 @@ export class Model {
                     min = value;
                 }
             }
-            return ok(keys[minIndex]);
-        }
-    }
 
-    public getChooseMaxStrategy() {
-        return (keys: string[]): Result<string, Error> => {
-            let maxIndex = 0;
-            let max = -Infinity;
-            for(let i = 0; i < keys.length; i++) {
-                const key = keys[i];
-                const result = this.predict(key);
-                if (result.isErr()) return err(result.error);
-                
-                const value = result.value;
-                if (value > max) {
-                    maxIndex = i;
-                    max = value;
-                }
-            }
-            return ok(keys[maxIndex]);
+            return ok(keys[minIndex]);
         }
     }
 
@@ -62,8 +44,10 @@ export class Model {
         const modelDataResult = ModelData.createData(key);
         if (modelDataResult.isErr()) return err(modelDataResult.error);
         const prediction = this.model.predict(modelDataResult.value.getData());
-
+        
         // @ts-ignore
-        return ok(prediction.arraySync()[0]);
+        const score: number = prediction.arraySync()[0][0];
+
+        return ok(score);
     }
 }

@@ -24,7 +24,6 @@ export class ModelData {
             .flat();
         
         const ten = tensor([...boardVec, ...capturedVec], [1, 150], 'float32');
-        console.log(ten);
 
         return keyValidation(key).map(() => new ModelData(key, ten));
     }

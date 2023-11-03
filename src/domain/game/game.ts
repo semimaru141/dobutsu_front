@@ -159,13 +159,16 @@ export class Game {
         }
     }
 
-    public selectNextState(chooseKeyStrategy: (keys: string[]) => Result<string, Error>): Result<Game, Error> {
+    public selectNextState(
+        chooseKeyStrategy: (keys: string[]) => Result<string, Error>,
+        turnPlayer: Player
+    ): Result<Game, Error> {
         // プレイヤーの手番の場合は要求を無視する
         const playType = this.gameState.getPlayTypeStatus();
         if (playType === 'CLICK') return err(new Error());
 
-
         const keys = this.shogiState.getNextStates(this.gameState.getTurnPlayer())
+            .map((state) => turnPlayer === 'OPPONENT' ? state : state.turnState())
             .map((state) => state.getKey());
         const keyResult = chooseKeyStrategy(keys);
 
@@ -173,8 +176,9 @@ export class Game {
 
         const stateResult = ShogiState.parseKey(keyResult.value);
         if (stateResult.isErr()) return err(stateResult.error);
+        const newState = turnPlayer === 'OPPONENT' ? stateResult.value : stateResult.value.turnState();
 
-        return ok(this.turnEnd(stateResult.value));
+        return ok(this.turnEnd(newState));
     }
 
     public isFinished(): boolean {

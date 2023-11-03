@@ -67,6 +67,8 @@ export class ShogiState {
             // 成り判定
             if (fromSquare.getPiece() === MY_CHICK_NUM && to < 3) {
                 newBoard[to] = newToSquare.setPiece(MY_HEN_NUM);
+            } else if (fromSquare.getPiece() === OP_CHICK_NUM && to > 8) {
+                newBoard[to] = newToSquare.setPiece(OP_HEN_NUM);
             } else {
                 newBoard[to] = newToSquare;
             }
@@ -190,6 +192,12 @@ export class ShogiState {
         return {
             isFinished: false,
         }
+    }
+
+    public turnState(): ShogiState {
+        const newBoard = this.board.reverse().map(square => square.turnState());
+        const newCaptured = [...this.captured.slice(0, 3), ...this.captured.slice(3)]
+        return new ShogiState(newBoard, newCaptured);
     }
 
     // ====================

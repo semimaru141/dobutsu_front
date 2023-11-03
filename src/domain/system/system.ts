@@ -75,8 +75,7 @@ export class System {
                 return;
             }
 
-            const strategy = params.turnPlayer === 'ME' ? model.getChooseMaxStrategy() : model.getChooseMinStrategy();
-            const result = this.game.selectNextState(strategy);
+            const result = this.game.selectNextState(model.getChooseStrategy(), params.turnPlayer);
             if (result.isErr()) return;
             this.game = result.value;
 
@@ -100,7 +99,7 @@ export class System {
                 this.modelListener.emitStrategyEvent({
                     turnPlayer: this.game.getTurnPlayer(),
                 });
-            }, STRATEGY_INTARVAL_MILLI_SEC)
+            }, STRATEGY_INTARVAL_MILLI_SEC);
         }
     }
 }

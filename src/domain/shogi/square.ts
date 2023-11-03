@@ -1,5 +1,5 @@
 import { EMPTY, Piece, SquareIndex } from "@/const";
-import { isEmpty } from "@/util/pieceFunc";
+import { isEmpty, isMyPiece } from "@/util/pieceFunc";
 
 export class Square {
     constructor (
@@ -29,5 +29,10 @@ export class Square {
 
     public getKey(): string {
         return this.piece !== 10 ? this.piece.toString() : 'a';
+    }
+
+    public turnState(): Square {
+        const turnedState = (isEmpty(this.piece) ? EMPTY : isMyPiece(this.piece) ? this.piece + 5 : this.piece - 5) as Piece;
+        return new Square(this.index, turnedState);
     }
 }
