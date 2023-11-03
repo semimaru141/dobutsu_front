@@ -6,7 +6,8 @@ export const useSetting = () => {
     const {
         game,
         stateListener,
-        gameListener
+        gameListener,
+        setModel
     } = useSystem();
     const [system, setSystem] = useState<SystemViewModel>(game.getSystemViewModel()); 
 
@@ -22,6 +23,12 @@ export const useSetting = () => {
         }
     }, [
         stateListener,
+    ]);
+
+    useEffect(() => {
+        setModel('multi2_12');
+    }, [
+        setModel,
     ]);
 
     const reset = useCallback(() => {

@@ -1,4 +1,6 @@
-import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_INDEX, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_INDEX, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, Player, SquareIndex } from "@/const";
+import { CapturedIndex, EMPTY, INITIAL_BOARD, INITIAL_CAPTURED, KEY_VALIDATOR, MyCapturedIndex, MyPiece, MY_CHICK_INDEX, MY_CHICK_NUM, MY_ELE_INDEX, MY_ELE_NUM, MY_GIR_INDEX, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OpPiece, OP_CHICK_INDEX, OP_CHICK_NUM, OP_ELE_INDEX, OP_ELE_NUM, OP_GIR_INDEX, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, Player, SquareIndex } from "@/const";
+import { isMyCaptured, isOpCaptured } from "@/util/capturedFunc";
+import { keyValidation } from "@/util/keyValidation";
 import { isEmpty, isLion, isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { err, ok, Result } from "neverthrow";
 import { Captured } from "./captured";
@@ -10,14 +12,28 @@ export class ShogiState {
         private readonly captured: Captured[],
     ) {}
 
-    static createInitialState(): ShogiState {
+    public static createInitialState(): ShogiState {
         const initial_board = INITIAL_BOARD.map((piece, index) => new Square(index as SquareIndex, piece));
         const initial_captured = INITIAL_CAPTURED.map((amount, index) => new Captured(index as CapturedIndex, amount));
         return new ShogiState(initial_board, initial_captured);
     }
 
+    public static parseKey(key: string): Result<ShogiState, Error> {
+        const boardKey = key.slice(0, 12);
+        const capturedKey = key.slice(12);
+        const board = boardKey
+            .split('')
+            .map((piece, index) => new Square(index as SquareIndex, piece !== 'a' ? Number(piece) as Piece : 10));
+        const captured = capturedKey
+            .split('')
+            .map((amount, index) => new Captured(index as CapturedIndex, Number(amount)));
+        return keyValidation(key).map(() => new ShogiState(board, captured));
+    }
+
     public getKey(): string {
-        return '000000000000000000';
+        const boardKey = this.board.map(square => square.getKey()).join('');
+        const capturedKey = this.captured.map(captured => captured.getKey()).join('');
+        return boardKey + capturedKey;
     }
 
     public getPiece(squareIndex: SquareIndex): Piece {
@@ -110,9 +126,30 @@ export class ShogiState {
         }
     }
 
-    public getNextStates(): ShogiState[] {
-        // TODO: ここで次の状態を返す
-        return [];
+    public getNextStates(turnPlayer: Player): ShogiState[] {
+        const pieceFunc = turnPlayer === 'ME' ? isMyPiece : isOpPiece;
+        const boardStates = this.board.map((square, index) => {
+            return pieceFunc(square.getPiece()) ?
+                Array(12).fill(undefined).map((_, i) => {
+                    const result = this.movePiece(index as SquareIndex, i as SquareIndex);
+                    if (result.isOk()) return [result.value];
+                    else return [];
+                }).flat() :
+                [];
+        }).flat();
+
+        const capturedFunc = turnPlayer === 'ME' ? isMyCaptured : isOpCaptured;
+        const capturedStates = this.captured.map((captured, index) => {
+            return capturedFunc(index as CapturedIndex) && captured.getAmount() !== 0 ?
+                Array(12).fill(undefined).map((_, i) => {
+                    const result = this.putPiece(index as CapturedIndex, i as SquareIndex);
+                    if (result.isOk()) return [result.value];
+                    else return [];
+                }).flat() :
+                [];
+        }).flat();
+
+        return [...boardStates, ...capturedStates];
     }
 
     public isFinished(turnPlayer: Player): {
@@ -214,7 +251,7 @@ export class ShogiState {
         const moveDiffs = ((): number[] => {
             switch (piece) {
                 case MY_CHICK_NUM:
-                    if (squareIndex > 3) return [-3];
+                    if (squareIndex > 2) return [-3];
                     else return [];
                 case OP_CHICK_NUM:
                     if (squareIndex < 9) return [3];

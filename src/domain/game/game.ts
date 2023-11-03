@@ -1,4 +1,4 @@
-import { CapturedIndex, SquareIndex } from "@/const";
+import { CapturedIndex, Player, SquareIndex } from "@/const";
 import { isEmpty } from "@/util/pieceFunc";
 import { CapturedState, CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { SquareState, SquareViewModel } from "@/viewModel/squareViewModel";
@@ -92,7 +92,15 @@ export class Game {
         }
     }
 
+    public isTurnForStrategy(): boolean {
+        return this.gameState.getPlayTypeStatus() === 'STRATEGY';
+    }
+
     public clickBoard(clickedSquareIndex: SquareIndex): Result<Game, Error> {
+        // AIの手番の場合はクリックを無視する
+        const playType = this.gameState.getPlayTypeStatus();
+        if (playType === 'STRATEGY') return err(new Error());
+
         const toPiece = this.shogiState.getPiece(clickedSquareIndex);
         const selectingAction = this.gameState.getSelectingAction();
 
@@ -131,6 +139,10 @@ export class Game {
     }
 
     public clickCaptured(capturedIndex: CapturedIndex): Result<Game, Error> {
+        // AIの手番の場合はクリックを無視する
+        const playType = this.gameState.getPlayTypeStatus();
+        if (playType === 'STRATEGY') return err(new Error());
+
         const selectingAction = this.gameState.getSelectingAction();
 
         if (selectingAction.type === 'CAPTURED' && selectingAction.capturedIndex === capturedIndex) {
@@ -145,6 +157,32 @@ export class Game {
             if (result.isErr()) return err(result.error);
             return ok(new Game(this.shogiState, result.value));
         }
+    }
+
+    public selectNextState(chooseKeyStrategy: (keys: string[]) => Result<string, Error>): Result<Game, Error> {
+        // プレイヤーの手番の場合は要求を無視する
+        const playType = this.gameState.getPlayTypeStatus();
+        if (playType === 'CLICK') return err(new Error());
+
+
+        const keys = this.shogiState.getNextStates(this.gameState.getTurnPlayer())
+            .map((state) => state.getKey());
+        const keyResult = chooseKeyStrategy(keys);
+
+        if (keyResult.isErr()) return err(keyResult.error);
+
+        const stateResult = ShogiState.parseKey(keyResult.value);
+        if (stateResult.isErr()) return err(stateResult.error);
+
+        return ok(this.turnEnd(stateResult.value));
+    }
+
+    public isFinished(): boolean {
+        return this.gameState.isFinished();
+    }
+
+    public getTurnPlayer(): Player {
+        return this.gameState.getTurnPlayer();
     }
 
     // ========================================

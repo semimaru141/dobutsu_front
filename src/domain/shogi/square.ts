@@ -26,4 +26,8 @@ export class Square {
     public setPiece(piece: Piece): Square {
         return new Square(this.index, piece);
     }
+
+    public getKey(): string {
+        return this.piece !== 10 ? this.piece.toString() : 'a';
+    }
 }
