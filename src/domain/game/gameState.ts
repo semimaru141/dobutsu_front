@@ -1,4 +1,4 @@
-import { CapturedIndex, Piece, Player, SquareIndex } from "@/const";
+import { CapturedIndex, Piece, Player, PlayType, PlayTypeStatus, SquareIndex } from "@/const";
 import { isMyCaptured, isOpCaptured } from "@/util/capturedFunc";
 import { isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { err, ok, Result } from "neverthrow";
@@ -26,12 +26,6 @@ type Finished = {
 }
 export type FinishStatus = NotFinish | Finished;
 
-type PlayType = "CLICK" | "STRATEGY";
-type PlayTypeStatus = {
-    me: PlayType,
-    opponent: PlayType,
-}
-
 /**
  * Gameの状態についてのクラス
  * 「自分の手番・相手の手番の状態」と選択中のマスの情報を持つ
@@ -45,7 +39,7 @@ export class GameState {
         /**
          * 自分の手番かどうか
          */
-        private turnPlayer: Player,
+        private turnPlayer: Player = 'ME',
         /**
          * 選択中のマスの
          */
@@ -56,11 +50,8 @@ export class GameState {
         private finishStatus: FinishStatus = { type: 'NOTFINISH' }
     ) {}
 
-    static createInitialState() {
-        return new GameState({
-            me: 'STRATEGY',
-            opponent: 'STRATEGY',
-        }, 'ME');
+    static createInitialState(playTypeStatus: PlayTypeStatus) {
+        return new GameState(playTypeStatus);
     }
 
     public getTurnPlayer() {
@@ -88,11 +79,15 @@ export class GameState {
         return ok(this.finishStatus.winner);
     }
 
-    public getPlayTypeStatus(): PlayType {
+    public getPlayType(): PlayType {
         switch (this.turnPlayer) {
             case 'ME': return this.playTypeStatus.me;
             case 'OPPONENT': return this.playTypeStatus.opponent;
         }
+    }
+
+    public getPlayTypeStatus() {
+        return this.playTypeStatus;
     }
 
     public setFinishStatus(winner: Player) {

@@ -3,7 +3,7 @@
 import { Board } from '@/components/board'
 import { MyCaptured } from '@/components/MyCaptured'
 import { OpCaptured } from '@/components/OpCaptured'
-import { System } from '@/components/System'
+import { Setting } from '@/components/Setting'
 import styled from 'styled-components'
 
 export default function Home() {
@@ -12,7 +12,7 @@ export default function Home() {
       <OpCaptured></OpCaptured>
       <Board></Board>
       <MyCaptured></MyCaptured>
-      <System></System>
+      <Setting></Setting>
     </Main>
   )
 }

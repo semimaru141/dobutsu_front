@@ -8,4 +8,6 @@ export type SystemViewModel = {
     } | {
         isFinished: false;
     };
+    thinking: boolean;
+    notStarted: boolean;
 }

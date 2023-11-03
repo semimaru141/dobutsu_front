@@ -5,11 +5,12 @@ import { StateListener } from "../game/stateListner";
 import { Model } from "../model/model";
 import { ModelListener } from "../model/modelListener";
 
-const STRATEGY_INTARVAL_MILLI_SEC = 1000;
+const STRATEGY_INTARVAL_MILLI_SEC = 1500;
 
 export class System {
     private game: Game;
     private model: Model | undefined = undefined;
+    private notStarted = true;
 
     constructor (
         private readonly gameListner: GameListener,
@@ -43,13 +44,22 @@ export class System {
         // 初期設定、イベントリスナの登録など
         this.gameListner.onGameEvent((param) => {
             switch (param.type) {
-                case 'reset':
-                    this.game = Game.createInitialState();
+                case 'start': {
+                    this.game = Game.createInitialState(param.playType);
+                    break;
+                } case 'reset': {
+                    this.game = Game.createInitialState(this.game.getPlayTypeStatus());
+                    break;
+                }
             }
+            this.notStarted = false;
             this.emitEvents();
         });
 
         this.gameListner.onClickEvent((param) => {
+            // ゲーム開始前はクリックイベントを無視する
+            if (this.notStarted) return;
+
             switch (param.type) {
                 case 'BOARD': {
                     const result = this.game.clickBoard(param.squareIndex);
@@ -92,7 +102,7 @@ export class System {
             this.stateListener.emitCapturedViewModel(i as CapturedIndex, this.game.getCapturedViewModel(i as CapturedIndex));
         }
 
-        this.stateListener.emitSystemViewModel(this.game.getSystemViewModel());
+        this.stateListener.emitSystemViewModel(this.game.getSystemViewModel(this.notStarted));
         
         if (this.game.isTurnForStrategy() && !this.game.isFinished()) {
             setTimeout(() => {

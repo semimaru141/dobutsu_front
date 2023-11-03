@@ -13,15 +13,21 @@ export const Square: React.FC<Props> = ({ squareIndex }) => {
         clickBoard
     } = useSquare({ squareIndex });
 
-    const str = pieceStringParser(square.piece);
-
     return (
         <SquareDiv
             $clickable={square.state}
             $player={isMyPiece(square.piece) ? 'ME' : 'OPPONENT'}
             onClick={clickBoard}
         >
-            {str}
+            {pieceStringParser(square.piece)}
+            {pieceDotChanger(square.piece).map((dot, index) => (
+                <DotDiv
+                    $x={dot[0]}
+                    $y={dot[1]}
+                    $player={isMyPiece(square.piece) ? 'ME' : 'OPPONENT'}
+                    key={index + '_' + square.piece + '_dot_' + dot[0] + '_' + dot[1]}
+                />
+            ))}
         </SquareDiv>
     );
 };
@@ -53,6 +59,30 @@ const pieceStringParser = (piece: Piece): string => {
     }   
 }
 
+const pieceDotChanger = (piece: Piece): [-1 | 0 | 1, -1 | 0 | 1][] => {
+    switch (piece) {
+        case EMPTY:
+            return [];
+        case MY_LION_NUM:
+        case OP_LION_NUM:
+            return [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+        case MY_ELE_NUM:
+        case OP_ELE_NUM:
+            return [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+        case MY_GIR_NUM:
+        case OP_GIR_NUM:
+            return [[0, -1], [-1, 0], [1, 0], [0, 1]];
+        case MY_CHICK_NUM:
+            return [[0, -1]];
+        case OP_CHICK_NUM:
+            return [[0, 1]];
+        case MY_HEN_NUM:
+            return [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [0, 1]];
+        case OP_HEN_NUM:
+            return [[0, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+    }   
+}
+
 const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
     width: 100px;
     height: 100px;
@@ -61,11 +91,45 @@ const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
     justify-content: center;
     align-items: center;
     font-size: 40px;
+    position: relative;
+    ${
+        props =>  props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : ''
+    };
+    ${
+        props => props.$player === 'ME' ? 'color: black' : 'color: red'
+    };
+`;
+
+const DotDiv = styled.div<{ $x: -1 | 0 | 1, $y: -1 | 0 | 1, $player: Player }>`
+    position: absolute;
     ${
         props => {
-            const background = props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : '';
-            const color = props.$player === 'ME' ? 'color: black' : 'color: red';
-            return [background, color].join(';');
+            switch (props.$y) {
+                case -1:
+                    return 'top: 5px';
+                case 0:
+                    return '';
+                case 1:
+                    return 'bottom: 5px';
+            }
         }
-    }
+    };
+    ${
+        props => {
+            switch (props.$x) {
+                case -1:
+                    return 'left: 5px';
+                case 0:
+                    return '';
+                case 1:
+                    return 'right: 5px';
+            }
+        }
+    };
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    ${
+        props => props.$player === 'ME' ? 'background-color: black' : 'background-color: red'
+    };
 `;

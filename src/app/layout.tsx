@@ -18,7 +18,10 @@ export default function RootLayout({
         new GameListener(),
         new StateListener(),
         new ModelListener(),
-        Game.createInitialState()
+        Game.createInitialState({
+          me: 'CLICK',
+          opponent: 'CLICK',
+        })
       )
     }>
       <html lang="jp">
