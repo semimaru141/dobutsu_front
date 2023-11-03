@@ -47,3 +47,5 @@ export type PlayTypeStatus = {
     opponent: PlayType,
 }
 export const KEY_VALIDATOR = /([0-9]|a){12}[0-2]{6}/
+
+export const BASE_PATH = '/dobutsu_front'

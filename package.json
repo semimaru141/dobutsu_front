@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "export": "next build && next export",
-    "deploy": "npm run export && gh-pages -d out -b gh-pages"
+    "deploy": "npm run export && gh-pages -d out -b gh-pages -t true"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.9.0",

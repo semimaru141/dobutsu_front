@@ -1,3 +1,4 @@
+import { BASE_PATH } from "@/const";
 import { loadLayersModel, LayersModel } from "@tensorflow/tfjs";
 import { err, ok, Result } from "neverthrow";
 import path from "path";
@@ -11,7 +12,7 @@ export class Model {
     ) {}
 
     public static async load(filename: string) {
-        const model = await loadLayersModel(path.join('/models', filename, 'model.json'));
+        const model = await loadLayersModel(path.join(BASE_PATH, '/models', filename, 'model.json'));
         return new Model(model);
     }
 

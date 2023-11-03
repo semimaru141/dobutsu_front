@@ -1,5 +1,6 @@
 import { PlayTypeStatus } from "@/const";
 import { SystemViewModel } from "@/viewModel/systemViewModel";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { useSystem } from "./systemProvider"
 
