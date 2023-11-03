@@ -1,6 +1,6 @@
 "use client"
 
-import { Board } from '@/components/board'
+import { Board } from '@/components/Board'
 import { MyCaptured } from '@/components/MyCaptured'
 import { OpCaptured } from '@/components/OpCaptured'
 import { Setting } from '@/components/Setting'

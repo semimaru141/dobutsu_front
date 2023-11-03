@@ -11,9 +11,9 @@
     "deploy": "npm run export && gh-pages -d out -b gh-pages"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^4.12.0",
+    "@tensorflow/tfjs": "^4.9.0",
     "neverthrow": "^6.1.0",
-    "next": "14.0.1",
+    "next": "13.5.6",
     "react": "^18",
     "react-dom": "^18",
     "styled-components": "^6.1.0"
