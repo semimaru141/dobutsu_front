@@ -2,7 +2,7 @@
 
 import { SystemContext } from '../hooks/systemProvider'
 import { Game } from '../domain/game/game'
-import { GameListener } from '../domain/game/GameListener'
+import { GameListener } from '../domain/game/gameListener'
 import { StateListener } from '@/domain/game/stateListner'
 import { System } from '@/domain/system/system';
 import { ModelListener } from '@/domain/model/modelListener';
