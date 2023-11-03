@@ -1,4 +1,4 @@
-import { CapturedIndex, Piece, Player, SquareIndex } from "@/const";
+import { CapturedIndex, Piece, Player, PlayType, PlayTypeStatus, SquareIndex } from "@/const";
 import { isMyCaptured, isOpCaptured } from "@/util/capturedFunc";
 import { isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { err, ok, Result } from "neverthrow";
@@ -24,7 +24,6 @@ type Finished = {
     type: 'FINISHED',
     winner: Player,
 }
-
 export type FinishStatus = NotFinish | Finished;
 
 /**
@@ -34,19 +33,25 @@ export type FinishStatus = NotFinish | Finished;
 export class GameState {
     constructor(
         /**
+         * 先手・後手の操作方法
+         */
+        private playTypeStatus: PlayTypeStatus,
+        /**
          * 自分の手番かどうか
          */
-        private turnPlayer: Player,
+        private turnPlayer: Player = 'ME',
         /**
          * 選択中のマスの
          */
         private selectingAction: SelectingAction = { type: 'NONE' },
-
+        /**
+         * ゲームが終了しているかどうか
+         */
         private finishStatus: FinishStatus = { type: 'NOTFINISH' }
     ) {}
 
-    static createInitialState() {
-        return new GameState('ME');
+    static createInitialState(playTypeStatus: PlayTypeStatus) {
+        return new GameState(playTypeStatus);
     }
 
     public getTurnPlayer() {
@@ -58,7 +63,7 @@ export class GameState {
      * 選択中のアクションはクリアされる
      */
     public toggleTurn() {
-        return new GameState(this.turnPlayer === 'ME' ? 'OPPONENT' : 'ME');
+        return new GameState(this.playTypeStatus, this.turnPlayer === 'ME' ? 'OPPONENT' : 'ME');
     }
 
     public getSelectingAction() {
@@ -74,8 +79,19 @@ export class GameState {
         return ok(this.finishStatus.winner);
     }
 
+    public getPlayType(): PlayType {
+        switch (this.turnPlayer) {
+            case 'ME': return this.playTypeStatus.me;
+            case 'OPPONENT': return this.playTypeStatus.opponent;
+        }
+    }
+
+    public getPlayTypeStatus() {
+        return this.playTypeStatus;
+    }
+
     public setFinishStatus(winner: Player) {
-        return new GameState(this.turnPlayer, this.selectingAction, { type: 'FINISHED', winner });
+        return new GameState(this.playTypeStatus, this.turnPlayer, this.selectingAction, { type: 'FINISHED', winner });
     }
 
     public setSelectingAction(selectiongAction: SelectingAction): Result<GameState, Error> {
@@ -85,19 +101,19 @@ export class GameState {
             case 'BOARD': {
                 const result = this.boardValidateion(selectiongAction);
                 if (result.isErr()) return err(result.error);
-                return ok(new GameState(this.turnPlayer, selectiongAction));
+                return ok(new GameState(this.playTypeStatus, this.turnPlayer, selectiongAction));
             } case 'CAPTURED': {
                 const result = this.capturedValidateion(selectiongAction);
                 if (result.isErr()) return err(result.error);
-                return ok(new GameState(this.turnPlayer, selectiongAction));
+                return ok(new GameState(this.playTypeStatus, this.turnPlayer, selectiongAction));
             } case 'NONE': {
-                return ok(new GameState(this.turnPlayer, selectiongAction));
+                return ok(new GameState(this.playTypeStatus, this.turnPlayer, selectiongAction));
             }
         }
     }
 
     public clearSelectingAction() {
-        return new GameState(this.turnPlayer, { type: 'NONE' });
+        return new GameState(this.playTypeStatus, this.turnPlayer, { type: 'NONE' });
     }
 
     // ========================================

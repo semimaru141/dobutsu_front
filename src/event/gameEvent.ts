@@ -1,4 +1,4 @@
-import { CapturedIndex, SquareIndex } from "@/const";
+import { CapturedIndex, PlayType, PlayTypeStatus, SquareIndex } from "@/const";
 
 export const CLICK_EVENT = 'click';
 export type ClickEventParams = {
@@ -10,7 +10,9 @@ export type ClickEventParams = {
 }
 
 export const GAME_EVENT = 'game';
-const gameEvents = ["reset"] as const;
 export type GameEventParams = {
-    type: typeof gameEvents[number];
+    type: 'reset'
+} | {
+    type: 'start'
+    playType: PlayTypeStatus
 }

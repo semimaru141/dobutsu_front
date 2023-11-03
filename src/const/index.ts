@@ -41,3 +41,9 @@ export const INITIAL_CAPTURED = [0, 0, 0, 0, 0, 0] as const
 export type SquareIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
 export type Player = 'ME' | 'OPPONENT';
+export type PlayType = 'CLICK' | 'STRATEGY';
+export type PlayTypeStatus = {
+    me: PlayType,
+    opponent: PlayType,
+}
+export const KEY_VALIDATOR = /([0-9]|a){12}[0-2]{6}/

@@ -17,4 +17,8 @@ export class Captured {
     public setAmount(amount: number): Captured {
         return new Captured(this.capturedIndex, amount);
     }
+
+    public getKey(): string {
+        return this.amount.toString();
+    }
 }
