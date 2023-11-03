@@ -196,7 +196,7 @@ export class ShogiState {
 
     public turnState(): ShogiState {
         const newBoard = this.board.reverse().map(square => square.turnState());
-        const newCaptured = [...this.captured.slice(0, 3), ...this.captured.slice(3)]
+        const newCaptured = [...this.captured.slice(3), ...this.captured.slice(0, 3)]
         return new ShogiState(newBoard, newCaptured);
     }
 

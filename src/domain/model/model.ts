@@ -48,6 +48,7 @@ export class Model {
         // @ts-ignore
         const score: number = prediction.arraySync()[0][0];
 
+        this.cache.set(key, score);
         return ok(score);
     }
 }
