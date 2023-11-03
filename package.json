@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next build && next export",
+    "deploy": "npm run export && gh-pages -d out -b gh-pages"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.12.0",
@@ -22,6 +24,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.0.1",
+    "gh-pages": "^6.0.0",
     "typescript": "^5"
   }
 }
