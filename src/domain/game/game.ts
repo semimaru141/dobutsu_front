@@ -1,5 +1,5 @@
 import { CapturedIndex, Player, PlayTypeStatus, SquareIndex } from "@/const";
-import { isEmpty } from "@/util/pieceFunc";
+import { isEmpty, isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { CapturedState, CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { SquareState, SquareViewModel } from "@/viewModel/squareViewModel";
 import { SystemViewModel } from "@/viewModel/systemViewModel";
@@ -117,6 +117,7 @@ export class Game {
         if (playType === 'STRATEGY') return err(new Error());
 
         const toPiece = this.shogiState.getPiece(clickedSquareIndex);
+        const turn = this.gameState.getTurnPlayer();
         const selectingAction = this.gameState.getSelectingAction();
 
         switch (selectingAction.type) {
@@ -133,6 +134,15 @@ export class Game {
                 if(selectingAction.squareIndex === clickedSquareIndex) {
                     // 選択中のマスとクリックされたマスが同じ場合は選択中のマスを解除する
                     return ok(this.clearState());
+                } else if ((turn === 'ME' && isMyPiece(toPiece)) || (turn === 'OPPONENT' && isOpPiece(toPiece))) {
+                    // 選択中のマスとクリックされたマスが異なる場合で、クリックされたマスに自分の駒がある場合は選択中のマスをクリックされたマスにする
+                    const result = this.gameState.setSelectingAction({
+                        type: 'BOARD',
+                        squareIndex: clickedSquareIndex,
+                        piece: toPiece,
+                    });
+                    if (result.isErr()) return err(result.error);
+                    return ok(new Game(this.shogiState, result.value));
                 } else {
                     // 選択中のマスとクリックされたマスが異なる場合は移動する
                     const moveRsult = this.shogiState.movePiece(selectingAction.squareIndex, clickedSquareIndex);
@@ -141,14 +151,25 @@ export class Game {
                     return ok(this.turnEnd(moveRsult.value));
                 }
             } case 'CAPTURED': {
-                // 選択中のマスが駒台の場合は、クリックされたマスに駒を置く
-                const putResult = this.shogiState.putPiece(
-                    selectingAction.capturedIndex,
-                    clickedSquareIndex
-                );
-                if (putResult.isErr()) return err(putResult.error);
-                
-                return ok(this.turnEnd(putResult.value));
+                if ((turn === 'ME' && isMyPiece(toPiece)) || (turn === 'OPPONENT' && isOpPiece(toPiece))) {
+                    // 選択中のマスとクリックされたマスが異なる場合で、クリックされたマスに自分の駒がある場合は選択中のマスをクリックされたマスにする
+                    const result = this.gameState.setSelectingAction({
+                        type: 'BOARD',
+                        squareIndex: clickedSquareIndex,
+                        piece: toPiece,
+                    });
+                    if (result.isErr()) return err(result.error);
+                    return ok(new Game(this.shogiState, result.value));
+                } else {
+                    // 選択中のマスが駒台の場合は、クリックされたマスに駒を置く
+                    const putResult = this.shogiState.putPiece(
+                        selectingAction.capturedIndex,
+                        clickedSquareIndex
+                    );
+                    if (putResult.isErr()) return err(putResult.error);
+                    
+                    return ok(this.turnEnd(putResult.value));
+                }
             }
         }
     }
