@@ -1,17 +1,13 @@
 "use client"
 
-import { Board } from '@/components/Board'
-import { MyCaptured } from '@/components/MyCaptured'
-import { OpCaptured } from '@/components/OpCaptured'
-import { Setting } from '@/components/Setting'
+import { PlayArea } from '@/components/PlayArea/PlayArea'
+import { Setting } from '@/components/Setting/Setting'
 import styled from 'styled-components'
 
 export default function Home() {
   return (
     <Main>
-      <OpCaptured></OpCaptured>
-      <Board></Board>
-      <MyCaptured></MyCaptured>
+      <PlayArea></PlayArea>
       <Setting></Setting>
     </Main>
   )
@@ -22,6 +18,5 @@ const Main = styled.main`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 350px;
-  margin: 0 auto;
+  margin: 12px auto;
 `;

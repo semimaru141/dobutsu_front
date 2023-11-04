@@ -1,8 +1,6 @@
 import { PlayTypeStatus } from "@/const";
-import { SystemViewModel } from "@/viewModel/systemViewModel";
-import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
-import { useSystem } from "./systemProvider"
+import { useGlobal } from "../systemProvider"
 
 type PlayTypeStatusValue = 'CC' | 'CS' | 'SC' | 'SS';
 const playTypeStatusList: {
@@ -46,27 +44,10 @@ const playTypeStatusList: {
 
 export const useSetting = () => {
     const {
-        game,
-        stateListener,
         gameListener,
         setModel
-    } = useSystem();
-    const [system, setSystem] = useState<SystemViewModel>(game.getSystemViewModel(true));
+    } = useGlobal();
     const [playTypeIndex, setPlayTypeIndex] = useState<PlayTypeStatusValue>('CC');
-
-    useEffect(() => {
-        const listener = (systemViewModel: SystemViewModel) => {
-            setSystem(systemViewModel);
-        }
-
-        stateListener.onSystemViewModel(listener);
-
-        return () => {
-            stateListener.removeSystemViewModelListener(listener);
-        }
-    }, [
-        stateListener,
-    ]);
 
     useEffect(() => {
         setModel('multi2_12');
@@ -92,14 +73,13 @@ export const useSetting = () => {
         gameListener,
     ]);
 
-    const playTypeOnChange = useCallback((event: React.ChangeEvent<{ value: PlayTypeStatusValue }>) => {
-        setPlayTypeIndex(event.target.value as PlayTypeStatusValue);
+    const playTypeOnChange = useCallback((value: PlayTypeStatusValue) => {
+        setPlayTypeIndex(value);
     }, []);
 
     return {
         start,
         reset,
-        system,
         playTypePullDown: {
             value: playTypeIndex,
             onChange: playTypeOnChange,

@@ -15,9 +15,10 @@ export const MyCaptured = () => {
 }
 
 const CapturedRow = styled.div`
+    margin: 24px 36px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    height: 50px;
-    width: 100%;
+    height: 60px;
+    width: calc(100% - 72px);
 `;

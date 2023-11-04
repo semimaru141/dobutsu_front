@@ -1,5 +1,5 @@
 import { EMPTY, MY_CHICK_NUM, MY_ELE_NUM, MY_GIR_NUM, MY_HEN_NUM, MY_LION_NUM, OP_CHICK_NUM, OP_ELE_NUM, OP_GIR_NUM, OP_HEN_NUM, OP_LION_NUM, Piece, Player, SquareIndex } from "@/const";
-import { useSquare } from "@/hooks/useSquare";
+import { useSquare } from "@/hooks/playArea/useSquare";
 import { isMyPiece } from "@/util/pieceFunc";
 import { SquareState } from "@/viewModel/squareViewModel";
 import styled from "styled-components";
@@ -92,6 +92,7 @@ const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
     align-items: center;
     font-size: 40px;
     position: relative;
+    cursor: pointer;
     ${
         props =>  props.$clickable === 'clickable' ? 'background-color: pink' : props.$clickable === 'selecting' ? 'background-color: palegreen' : ''
     };

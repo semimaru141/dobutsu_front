@@ -2,7 +2,7 @@
 import { SquareIndex } from "@/const";
 import { SquareViewModel } from "@/viewModel/squareViewModel";
 import { useCallback, useEffect, useState } from "react";
-import { useSystem } from "./systemProvider"
+import { useGlobal } from "../systemProvider"
 
 export const useSquare = ({
     squareIndex,
@@ -13,7 +13,7 @@ export const useSquare = ({
         game,
         stateListener,
         gameListener
-    } = useSystem();
+    } = useGlobal();
 
     const [square, setSquare] = useState<SquareViewModel>(game.getSquareViewModel(squareIndex));
 
