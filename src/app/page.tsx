@@ -1,5 +1,6 @@
 "use client"
 
+import { Explain } from '@/components/Explain/Explain'
 import { PlayArea } from '@/components/PlayArea/PlayArea'
 import { Setting } from '@/components/Setting/Setting'
 import styled from 'styled-components'
@@ -9,6 +10,7 @@ export default function Home() {
     <Main>
       <PlayArea></PlayArea>
       <Setting></Setting>
+      <Explain></Explain>
     </Main>
   )
 }
