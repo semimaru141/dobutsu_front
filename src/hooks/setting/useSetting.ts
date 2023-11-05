@@ -1,3 +1,4 @@
+import { DEFAULT_REVERSE_TEMPERATURE, MAX_REVERSE_TEMPERATURE, MIN_REVERSE_TEMPERATURE, ReverseTemperature } from "@/const";
 import { ModelName, MODEL_NAMES } from "@/const/model";
 import { PlayType } from "@/domain/playType/playType";
 import { useCallback, useState } from "react";
@@ -7,19 +8,29 @@ type OptionValue = 'click' | `strategy_${ModelName}`;
 const options: ({
     name: string,
     value: OptionValue,
-    playType: PlayType,
+    modelName?: ModelName,
 })[] = [
     {
         name: 'プレイヤー',
         value: 'click',
-        playType: new PlayType('CLICK'),
     },
     ...MODEL_NAMES.map(model => ({
         name: 'AI: ' + model,
         value: 'strategy_' + model as OptionValue,
-        playType: new PlayType('STRATEGY', model),
+        modelName: model,
     }))
 ];
+
+const createPlayType = (modelName: ModelName | undefined, reverseTemperature: ReverseTemperature): PlayType => {
+    if (modelName === undefined) return PlayType.createClick();
+    const result = PlayType.create({
+        playStrategy: 'STRATEGY',
+        modelName,
+        reverseTemperature,
+    });
+    if (result.isErr()) throw result.error;
+    return result.value;
+};
 
 export const useSetting = () => {
     const {
@@ -29,9 +40,15 @@ export const useSetting = () => {
     const [meValue, setMeValue] = useState<OptionValue>('click');
     const [opValue, setOpValue] = useState<OptionValue>('click');
 
+    const [meReverseTemperature, setMeReverseTemperature] = useState<ReverseTemperature>(DEFAULT_REVERSE_TEMPERATURE);
+    const [opReverseTemperature, setOpReverseTemperature] = useState<ReverseTemperature>(DEFAULT_REVERSE_TEMPERATURE);
+
     const start = useCallback(() => {
-        const mePlayType = options.find(option => option.value === meValue)!.playType;
-        const opPlayType = options.find(option => option.value === opValue)!.playType;
+        const meModelName = options.find(option => option.value === meValue)!.modelName;
+        const opModelName = options.find(option => option.value === opValue)!.modelName;
+
+        const mePlayType = createPlayType(meModelName, meReverseTemperature);
+        const opPlayType = createPlayType(opModelName, opReverseTemperature);
 
         gameListener.emitGameEvent({
             type: 'start',
@@ -44,6 +61,8 @@ export const useSetting = () => {
         gameListener,
         meValue,
         opValue,
+        meReverseTemperature,
+        opReverseTemperature,
     ]);
 
     const reset = useCallback(() => {
@@ -54,20 +73,66 @@ export const useSetting = () => {
         gameListener,
     ]);
 
+    const meReverseTemperatureMinusOne = useCallback(() => {
+        if (MIN_REVERSE_TEMPERATURE < meReverseTemperature) {
+            setMeReverseTemperature(meReverseTemperature - 1);
+        }
+    }, [
+        meReverseTemperature,
+    ]);
+
+    const meReverseTemperaturePlusOne = useCallback(() => {
+        if (meReverseTemperature < MAX_REVERSE_TEMPERATURE) {
+            setMeReverseTemperature(meReverseTemperature + 1);
+        }
+    }, [
+        meReverseTemperature,
+    ]);
+
+    const opReverseTemperatureMinusOne = useCallback(() => {
+        if (MIN_REVERSE_TEMPERATURE < opReverseTemperature) {
+            setOpReverseTemperature(opReverseTemperature - 1);
+        }
+    }, [
+        opReverseTemperature,
+    ]);
+
+    const opReverseTemperaturePlusOne = useCallback(() => {
+        if (opReverseTemperature < MAX_REVERSE_TEMPERATURE) {
+            setOpReverseTemperature(opReverseTemperature + 1);
+        }
+    }, [
+        opReverseTemperature,
+    ]);
+
     return {
         start,
         reset,
-        playTypePullDown: {
-            me: {
+        me: {
+            playTypePullDown: {
                 value: meValue,
                 options,
                 onChange: setMeValue,
             },
-            opponent: {
+            reverseTemperature: {
+                value: meReverseTemperature,
+                onChange: setMeReverseTemperature,
+                minusOne: meReverseTemperatureMinusOne,
+                plusOne: meReverseTemperaturePlusOne,
+            }
+        },
+        opponent: {
+            playTypePullDown: {
                 value: opValue,
                 options,
                 onChange: setOpValue,
             },
+            reverseTemperature: {
+                value: opReverseTemperature,
+                onChange: setOpReverseTemperature,
+                minusOne: opReverseTemperatureMinusOne,
+                plusOne: opReverseTemperaturePlusOne,
+            }
         }
     }
 };

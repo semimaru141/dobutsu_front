@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { PullDown } from "./PullDown";
+import { Range } from "./Range";
 
 type Props<T extends string> = {
     pullDown: {
@@ -10,14 +11,26 @@ type Props<T extends string> = {
         }[];
         onChange: (props: T) => void;
     },
+    range: {
+        value: number;
+        onChange: (props: number) => void;
+        minusOne: () => void;
+        plusOne: () => void;
+    },
     label: string
 }
 
 export const PlayerTypeSetting = <T extends string,>({
     pullDown: {
-        value,
+        value: pdValue,
         options,
-        onChange
+        onChange: pdOnChange
+    },
+    range: {
+        value: rValue,
+        onChange: rOnChange,
+        minusOne,
+        plusOne
     },
     label
 }: Props<T>) => {
@@ -25,9 +38,15 @@ export const PlayerTypeSetting = <T extends string,>({
         <PlayerTypeSettingDiv>
             <Label>{label}</Label>
             <PullDown
-                value={value}
+                value={pdValue}
                 options={options}
-                onChange={onChange}
+                onChange={pdOnChange}
+            />
+            <Range 
+                value={rValue}
+                onChange={rOnChange}
+                minusOne={minusOne}
+                plusOne={plusOne}
             />
         </PlayerTypeSettingDiv>
     );

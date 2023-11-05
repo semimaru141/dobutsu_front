@@ -20,8 +20,8 @@ export default function RootLayout({
         new StateListener(),
         new ModelListener(),
         Game.createInitialState(),
-        new PlayType('CLICK'),
-        new PlayType('CLICK'),
+        PlayType.createClick(),
+        PlayType.createClick()
       )
     }>
       <html lang="jp">

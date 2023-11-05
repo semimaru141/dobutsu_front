@@ -10,6 +10,12 @@ export const Explain = () => {
                 1hour4: 1時間の学習で作成したモデル<br />
                 first2_l: 初期に作成したモデル<br />
             </ExplainText>
+            <ExplainTitle>逆温度</ExplainTitle>
+            <ExplainText>
+                AIが選択する手のランダム性を表す<br />
+                大きいほどランダム性が低くなり、強い手を打つようになる<br />
+                逆温度を最大にした際にはランダム性を完全に排除している<br />
+            </ExplainText>
         </ExplainDiv>
     );
 }
