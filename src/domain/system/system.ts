@@ -1,24 +1,40 @@
-import { CapturedIndex, SquareIndex } from "@/const";
+import { CapturedIndex, Player, SquareIndex } from "@/const";
+import { ModelName } from "@/const/model";
+import { CapturedViewModel } from "@/viewModel/capturedViewModel";
+import { SquareViewModel } from "@/viewModel/squareViewModel";
+import { SystemViewModel } from "@/viewModel/systemViewModel";
+import { Result } from "neverthrow";
 import { Game } from "../game/game";
 import { GameListener } from "../game/gameListener";
 import { StateListener } from "../game/stateListner";
 import { Model } from "../model/model";
 import { ModelListener } from "../model/modelListener";
+import { PlayType } from "../playType/playType";
 
 const STRATEGY_INTARVAL_MILLI_SEC = 1500;
 
 export class System {
     private game: Game;
-    private model: Model | undefined = undefined;
+    private playTypes: {
+        me: PlayType,
+        opponent: PlayType,
+    }
+    private models: Map<ModelName, Model> = new Map();
     private notStarted = true;
 
     constructor (
         private readonly gameListner: GameListener,
         private readonly stateListener: StateListener,
         private readonly modelListener: ModelListener,
-        game: Game
+        game: Game,
+        me: PlayType,
+        opponent: PlayType,
     ) {
         this.game = game;
+        this.playTypes = {
+            me,
+            opponent,
+        };
         this.init();
     }
 
@@ -34,10 +50,6 @@ export class System {
         return this.stateListener;
     }
 
-    public setModel(model: Model) {
-        this.model = model;
-    }
-
     // ========================================
 
     private init() {
@@ -45,10 +57,22 @@ export class System {
         this.gameListner.onGameEvent((param) => {
             switch (param.type) {
                 case 'start': {
-                    this.game = Game.createInitialState(param.playType);
+                    this.game = Game.createInitialState();
+
+                    const loadModelHandler = (result: Result<ModelName, Error>) => {
+                        if (result.isOk()) {
+                            this.loadModel(result.value);
+                        }
+                    }
+                    
+                    loadModelHandler(param.playType.me.getModelName());
+                    loadModelHandler(param.playType.opponent.getModelName());
+
+                    this.playTypes = param.playType;
+
                     break;
                 } case 'reset': {
-                    this.game = Game.createInitialState(this.game.getPlayTypeStatus());
+                    this.game = Game.createInitialState();
                     break;
                 }
             }
@@ -59,6 +83,9 @@ export class System {
         this.gameListner.onClickEvent((param) => {
             // ゲーム開始前はクリックイベントを無視する
             if (this.notStarted) return;
+
+            // AIの手番の場合はクリックイベントを無視する
+            if (this.getPlayType(this.game.getTurnPlayer()).getPlayStrategy() === 'STRATEGY') return;
 
             switch (param.type) {
                 case 'BOARD': {
@@ -77,8 +104,13 @@ export class System {
         });
 
         this.modelListener.onStrategyEvent((params) => {
-            const model = this.model;
+            const modelNameResult = this.getPlayType(params.turnPlayer).getModelName();
+            if (modelNameResult.isErr()) return;
+            const modelName = modelNameResult.value;
+
+            const model = this.models.get(modelName);
             if (model === undefined) {
+                console.log('model not found: ' + modelName)
                 setTimeout(() => {
                     this.modelListener.emitStrategyEvent(params);
                 }, STRATEGY_INTARVAL_MILLI_SEC);
@@ -95,21 +127,53 @@ export class System {
 
     private emitEvents() {
         for (let i = 0; i < 12; i++) {
-            this.stateListener.emitSquareViewModel(i as SquareIndex, this.game.getSquareViewModel(i as SquareIndex));
+            this.stateListener.emitSquareViewModel(i as SquareIndex, this.getSquareViewModel(i as SquareIndex));
         }
 
         for (let i = 0; i < 6; i++) {
-            this.stateListener.emitCapturedViewModel(i as CapturedIndex, this.game.getCapturedViewModel(i as CapturedIndex));
+            this.stateListener.emitCapturedViewModel(i as CapturedIndex, this.getCapturedViewModel(i as CapturedIndex));
         }
 
-        this.stateListener.emitSystemViewModel(this.game.getSystemViewModel(this.notStarted));
+        this.stateListener.emitSystemViewModel(this.getSystemViewModel());
         
-        if (this.game.isTurnForStrategy() && !this.game.isFinished()) {
+        const turnPlayer = this.game.getTurnPlayer();
+        if (this.getPlayType(turnPlayer).getPlayStrategy() === 'STRATEGY' && !this.game.isFinished()) {
             setTimeout(() => {
                 this.modelListener.emitStrategyEvent({
                     turnPlayer: this.game.getTurnPlayer(),
                 });
             }, STRATEGY_INTARVAL_MILLI_SEC);
         }
+    }
+
+    private getSquareViewModel(squareIndex: SquareIndex): SquareViewModel {
+        return this.game.getSquareViewModel(squareIndex);
+    }
+
+    private getCapturedViewModel(capturedIndex: CapturedIndex): CapturedViewModel {
+        return this.game.getCapturedViewModel(capturedIndex);
+    }
+
+    private getSystemViewModel(): SystemViewModel {
+        const viewModel = this.game.getSystemViewModel(this.notStarted);
+        const thinking = this.getPlayType(this.game.getTurnPlayer()).getPlayStrategy() === 'STRATEGY';
+
+        return {
+            ...viewModel,
+            thinking
+        }
+    }
+
+
+    private getPlayType(turnPlayer: Player) {
+        return turnPlayer === 'ME' ? this.playTypes.me : this.playTypes.opponent;
+    }
+
+    private loadModel(modelName: ModelName) {
+        if (this.models.has(modelName)) return;
+        Model.load(modelName).then((model) => {
+            console.log('load model: ' + modelName)
+            this.models.set(modelName, model);
+        });
     }
 }

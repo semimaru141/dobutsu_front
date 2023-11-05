@@ -1,5 +1,5 @@
 import { CapturedIndex, MY_CHICK_INDEX, MY_ELE_INDEX, MY_GIR_INDEX, OP_CHICK_INDEX, OP_ELE_INDEX, OP_GIR_INDEX } from "@/const";
-import { useCaptured } from "@/hooks/useCaptured";
+import { useCaptured } from "@/hooks/playArea/useCaptured";
 import styled from "styled-components";
 
 type Props = {
@@ -54,9 +54,10 @@ const CapturedDiv = styled.div<{ $selecting: boolean }>`
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 40px;
-    width: 50px;
-    height: 50px;
+    font-size: 48px;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
     ${
         props => props.$selecting ? 'background-color: palegreen' : ''
     }
@@ -64,6 +65,6 @@ const CapturedDiv = styled.div<{ $selecting: boolean }>`
 const CapturedDivNone = styled.div``;
 const CapturedAmount = styled.div`
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 2px;
+    right: 2px;
 `;

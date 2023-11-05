@@ -6,6 +6,7 @@ import { GameListener } from '../domain/game/gameListener'
 import { StateListener } from '@/domain/game/stateListner'
 import { System } from '@/domain/system/system';
 import { ModelListener } from '@/domain/model/modelListener';
+import { PlayType } from '@/domain/playType/playType';
 
 export default function RootLayout({
   children,
@@ -18,10 +19,9 @@ export default function RootLayout({
         new GameListener(),
         new StateListener(),
         new ModelListener(),
-        Game.createInitialState({
-          me: 'CLICK',
-          opponent: 'CLICK',
-        })
+        Game.createInitialState(),
+        new PlayType('CLICK'),
+        new PlayType('CLICK'),
       )
     }>
       <html lang="jp">

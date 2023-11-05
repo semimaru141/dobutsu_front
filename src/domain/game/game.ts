@@ -1,4 +1,4 @@
-import { CapturedIndex, Player, PlayTypeStatus, SquareIndex } from "@/const";
+import { CapturedIndex, Player, SquareIndex } from "@/const";
 import { isEmpty, isMyPiece, isOpPiece } from "@/util/pieceFunc";
 import { CapturedState, CapturedViewModel } from "@/viewModel/capturedViewModel";
 import { SquareState, SquareViewModel } from "@/viewModel/squareViewModel";
@@ -13,10 +13,10 @@ export class Game {
         private gameState: GameState,
     ) {}
 
-    public static createInitialState(playTypeStatus: PlayTypeStatus) {
+    public static createInitialState() {
         return new Game(
             ShogiState.createInitialState(),
-            GameState.createInitialState(playTypeStatus),
+            GameState.createInitialState(),
         );
     }
 
@@ -92,7 +92,7 @@ export class Game {
                     isFinished: false,
                 },
                 notStarted: false,
-                thinking: this.gameState.getPlayType() === 'STRATEGY',
+                thinking: false,
             };
         } else {
             return {
@@ -107,15 +107,7 @@ export class Game {
         }
     }
 
-    public isTurnForStrategy(): boolean {
-        return this.gameState.getPlayType() === 'STRATEGY';
-    }
-
     public clickBoard(clickedSquareIndex: SquareIndex): Result<Game, Error> {
-        // AIの手番の場合はクリックを無視する
-        const playType = this.gameState.getPlayType();
-        if (playType === 'STRATEGY') return err(new Error());
-
         const toPiece = this.shogiState.getPiece(clickedSquareIndex);
         const turn = this.gameState.getTurnPlayer();
         const selectingAction = this.gameState.getSelectingAction();
@@ -175,10 +167,6 @@ export class Game {
     }
 
     public clickCaptured(capturedIndex: CapturedIndex): Result<Game, Error> {
-        // AIの手番の場合はクリックを無視する
-        const playType = this.gameState.getPlayType();
-        if (playType === 'STRATEGY') return err(new Error());
-
         const selectingAction = this.gameState.getSelectingAction();
 
         if (selectingAction.type === 'CAPTURED' && selectingAction.capturedIndex === capturedIndex) {
@@ -199,10 +187,6 @@ export class Game {
         chooseKeyStrategy: (keys: string[]) => Result<string, Error>,
         turnPlayer: Player
     ): Result<Game, Error> {
-        // プレイヤーの手番の場合は要求を無視する
-        const playType = this.gameState.getPlayType();
-        if (playType === 'CLICK') return err(new Error());
-
         const keys = this.shogiState.getNextStates(this.gameState.getTurnPlayer())
             .map((state) => turnPlayer === 'OPPONENT' ? state : state.turnState())
             .map((state) => state.getKey());
@@ -223,10 +207,6 @@ export class Game {
 
     public getTurnPlayer(): Player {
         return this.gameState.getTurnPlayer();
-    }
-
-    public getPlayTypeStatus(): PlayTypeStatus {
-        return this.gameState.getPlayTypeStatus();
     }
 
     // ========================================
