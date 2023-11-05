@@ -1,68 +1,49 @@
-import { PlayTypeStatus } from "@/const";
-import { useCallback, useEffect, useState } from "react";
+import { ModelName, MODEL_NAMES } from "@/const/model";
+import { PlayType } from "@/domain/playType/playType";
+import { useCallback, useState } from "react";
 import { useGlobal } from "../systemProvider"
 
-type PlayTypeStatusValue = 'CC' | 'CS' | 'SC' | 'SS';
-const playTypeStatusList: {
-    value: PlayTypeStatusValue
+type OptionValue = 'click' | `strategy_${ModelName}`;
+const options: ({
     name: string,
-    status: PlayTypeStatus,
-}[] = [
+    value: OptionValue,
+    playType: PlayType,
+})[] = [
     {
-        value: 'CC',
-        name: '先手プレイヤー・後手プレイヤー',
-        status: {
-            me: 'CLICK',
-            opponent: 'CLICK',
-        }
+        name: 'プレイヤー',
+        value: 'click',
+        playType: new PlayType('CLICK'),
     },
-    {
-        value: 'CS',
-        name: '先手プレイヤー・後手AI',
-        status: {
-            me: 'CLICK',
-            opponent: 'STRATEGY',
-        }
-    },
-    {
-        value: 'SC',
-        name: '先手AI・後手プレイヤー',
-        status: {
-            me: 'STRATEGY',
-            opponent: 'CLICK',
-        }
-    },
-    {
-        value: 'SS',
-        name: '先手AI・後手AI',
-        status: {
-            me: 'STRATEGY',
-            opponent: 'STRATEGY',
-        }
-    },
+    ...MODEL_NAMES.map(model => ({
+        name: 'AI: ' + model,
+        value: 'strategy_' + model as OptionValue,
+        playType: new PlayType('STRATEGY', model),
+    }))
 ];
 
 export const useSetting = () => {
     const {
         gameListener,
-        setModel
     } = useGlobal();
-    const [playTypeIndex, setPlayTypeIndex] = useState<PlayTypeStatusValue>('CC');
 
-    useEffect(() => {
-        setModel('multi2_12');
-    }, [
-        setModel,
-    ]);
+    const [meValue, setMeValue] = useState<OptionValue>('click');
+    const [opValue, setOpValue] = useState<OptionValue>('click');
 
     const start = useCallback(() => {
+        const mePlayType = options.find(option => option.value === meValue)!.playType;
+        const opPlayType = options.find(option => option.value === opValue)!.playType;
+
         gameListener.emitGameEvent({
             type: 'start',
-            playType: playTypeStatusList.find((playType) => playType.value === playTypeIndex)!.status,
+            playType: {
+                me: mePlayType,
+                opponent: opPlayType,
+            }
         });
     }, [
         gameListener,
-        playTypeIndex
+        meValue,
+        opValue,
     ]);
 
     const reset = useCallback(() => {
@@ -73,17 +54,20 @@ export const useSetting = () => {
         gameListener,
     ]);
 
-    const playTypeOnChange = useCallback((value: PlayTypeStatusValue) => {
-        setPlayTypeIndex(value);
-    }, []);
-
     return {
         start,
         reset,
         playTypePullDown: {
-            value: playTypeIndex,
-            onChange: playTypeOnChange,
-            options: playTypeStatusList
+            me: {
+                value: meValue,
+                options,
+                onChange: setMeValue,
+            },
+            opponent: {
+                value: opValue,
+                options,
+                onChange: setOpValue,
+            },
         }
     }
 };
