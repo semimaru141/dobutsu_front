@@ -104,9 +104,14 @@ export class System {
         });
 
         this.modelListener.onStrategyEvent((params) => {
-            const modelNameResult = this.getPlayType(params.turnPlayer).getModelName();
+            const playType = this.getPlayType(params.turnPlayer);
+            const modelNameResult = playType.getModelName();
             if (modelNameResult.isErr()) return;
             const modelName = modelNameResult.value;
+
+            const reverseTemperatureResult = playType.getReverseTemperature();
+            if (reverseTemperatureResult.isErr()) return;
+            const reverseTemperature = reverseTemperatureResult.value;
 
             const model = this.models.get(modelName);
             if (model === undefined) {
@@ -117,7 +122,7 @@ export class System {
                 return;
             }
 
-            const result = this.game.selectNextState(model.getChooseStrategy(), params.turnPlayer);
+            const result = this.game.selectNextState(model.getChooseStrategy(reverseTemperature), params.turnPlayer);
             if (result.isErr()) return;
             this.game = result.value;
 

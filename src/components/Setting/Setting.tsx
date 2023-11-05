@@ -8,10 +8,14 @@ import { PlayerTypeSetting } from "./PlayerTypeSetting";
 export const Setting = () => {
     const { 
         start,
-        playTypePullDown: {
-            me,
-            opponent,
-        }
+        me: {
+            playTypePullDown: mePlayTypePullDown,
+            reverseTemperature: meReverseTemperature,
+        },
+        opponent: {
+            playTypePullDown: opponentPlayTypePullDown,
+            reverseTemperature: opponentReverseTemperature,
+        },
     } = useSetting();
 
     return (
@@ -22,11 +26,13 @@ export const Setting = () => {
             <SettingDivRight>
                 <PlayerTypeSetting
                     label="先手"
-                    pullDown={me}
+                    pullDown={mePlayTypePullDown}
+                    range={meReverseTemperature}
                 />
                 <PlayerTypeSetting
                     label="後手"
-                    pullDown={opponent}
+                    pullDown={opponentPlayTypePullDown}
+                    range={opponentReverseTemperature}
                 />
                 <Button onClick={start}>Start</Button>
             </SettingDivRight>      

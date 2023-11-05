@@ -42,6 +42,12 @@ export type SquareIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
 export type Player = 'ME' | 'OPPONENT';
 export type PlayStrategy = 'CLICK' | 'STRATEGY';
+
+export type ReverseTemperature = number;
+export const MIN_REVERSE_TEMPERATURE = 0;
+export const MAX_REVERSE_TEMPERATURE = 1000;
+export const DEFAULT_REVERSE_TEMPERATURE = MAX_REVERSE_TEMPERATURE;
+
 export const KEY_VALIDATOR = /([0-9]|a){12}[0-2]{6}/
 
 export const BASE_PATH = '/dobutsu_front'
