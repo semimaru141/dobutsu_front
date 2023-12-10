@@ -9,6 +9,7 @@ export const Explain = () => {
                 multi1_12: 活性化関数をそのまま足し合わせたモデル<br />
                 1hour4: 1時間の学習で作成したモデル<br />
                 first2_l: 初期に作成したモデル<br />
+                softmax1_29: softmax法の温度を低下させたテストモデル<br />
             </ExplainText>
             <ExplainTitle>逆温度</ExplainTitle>
             <ExplainText>
