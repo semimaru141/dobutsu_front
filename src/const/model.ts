@@ -3,7 +3,8 @@ export const MODEL_NAMES = [
     'multi1_20',
     '1hour4',
     'first2_l',
-    'softmax1_29'
+    'softmax1_29',
+    'softmax2_29'
 ] as const;
 
 export type ModelName = typeof MODEL_NAMES[number];
