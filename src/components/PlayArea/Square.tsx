@@ -13,13 +13,19 @@ export const Square: React.FC<Props> = ({ squareIndex }) => {
         clickBoard
     } = useSquare({ squareIndex });
 
+    const {
+        pieceString,
+        turn
+    } = pieceStringParser(square.piece);
+
     return (
         <SquareDiv
             $clickable={square.state}
             $player={isMyPiece(square.piece) ? 'ME' : 'OPPONENT'}
+            $turn={turn}
             onClick={clickBoard}
         >
-            {pieceStringParser(square.piece)}
+            {pieceString}
             {pieceDotChanger(square.piece).map((dot, index) => (
                 <DotDiv
                     $x={dot[0]}
@@ -32,30 +38,66 @@ export const Square: React.FC<Props> = ({ squareIndex }) => {
     );
 };
 
-const pieceStringParser = (piece: Piece): string => {
+const pieceStringParser = (piece: Piece): {
+    pieceString: string,
+    turn: boolean
+} => {
     switch (piece) {
         case EMPTY:
-            return '';
+            return {
+                pieceString: '',
+                turn: false
+            };
         case MY_LION_NUM:
-            return 'L';
+            return {
+                pieceString: 'ラ',
+                turn: false
+            };
         case MY_ELE_NUM:
-            return 'E';
+            return {
+                pieceString: 'ゾ',
+                turn: false
+            };
         case MY_GIR_NUM:
-            return 'G';
+            return {
+                pieceString: 'キ',
+                turn: false
+            };
         case MY_CHICK_NUM:
-            return 'C';
+            return {
+                pieceString: 'ヒ',
+                turn: false
+            };
         case MY_HEN_NUM:
-            return 'H';
+            return {
+                pieceString: 'ニ',
+                turn: false
+            };
         case OP_LION_NUM:
-            return 'l';
+            return {
+                pieceString: 'ラ',
+                turn: true
+            };
         case OP_ELE_NUM:
-            return 'e';
+            return {
+                pieceString: 'ゾ',
+                turn: true
+            };
         case OP_GIR_NUM:
-            return 'g';
+            return {
+                pieceString: 'キ',
+                turn: true
+            };
         case OP_CHICK_NUM:
-            return 'c';
+            return {
+                pieceString: 'ヒ',
+                turn: true
+            };
         case OP_HEN_NUM:
-            return 'h';
+            return {
+                pieceString: 'ニ',
+                turn: true
+            };
     }   
 }
 
@@ -83,7 +125,7 @@ const pieceDotChanger = (piece: Piece): [-1 | 0 | 1, -1 | 0 | 1][] => {
     }   
 }
 
-const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
+const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player, $turn: boolean }>`
     width: 100px;
     height: 100px;
     border: 1px solid black;
@@ -99,13 +141,17 @@ const SquareDiv = styled.div<{ $clickable: SquareState, $player: Player }>`
     ${
         props => props.$player === 'ME' ? 'color: black' : 'color: red'
     };
+    ${
+        props => props.$turn ? 'transform: rotate(180deg)' : ''
+    };
 `;
 
 const DotDiv = styled.div<{ $x: -1 | 0 | 1, $y: -1 | 0 | 1, $player: Player }>`
     position: absolute;
     ${
         props => {
-            switch (props.$y) {
+            const turnNum = props.$player === 'OPPONENT' ? -1 : 1;
+            switch (props.$y * turnNum) {
                 case -1:
                     return 'top: 5px';
                 case 0:

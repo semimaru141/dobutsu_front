@@ -11,7 +11,7 @@ import { Model } from "../model/model";
 import { ModelListener } from "../model/modelListener";
 import { PlayType } from "../playType/playType";
 
-const STRATEGY_INTARVAL_MILLI_SEC = 1500;
+const STRATEGY_INTARVAL_MILLI_SEC = 1000;
 
 export class System {
     private game: Game;

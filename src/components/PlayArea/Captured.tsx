@@ -33,17 +33,17 @@ export const Captured: React.FC<Props> = ({ capturedIndex }) => {
 const capturedStringParse = (capturedIndex: CapturedIndex): string => {
     switch (capturedIndex) {
         case MY_ELE_INDEX:
-            return 'E';
+            return 'ゾ';
         case MY_GIR_INDEX:
-            return 'G';
+            return 'キ';
         case MY_CHICK_INDEX:
-            return 'C';
+            return 'ヒ';
         case OP_ELE_INDEX:
-            return 'e';
+            return 'ゾ';
         case OP_GIR_INDEX:
-            return 'g';
+            return 'キ';
         case OP_CHICK_INDEX:
-            return 'c';
+            return 'ヒ';
     }
 }
 
@@ -54,7 +54,7 @@ const CapturedDiv = styled.div<{ $selecting: boolean }>`
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 48px;
+    font-size: 36px;
     width: 60px;
     height: 60px;
     cursor: pointer;
